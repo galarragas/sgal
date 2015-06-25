@@ -2,8 +2,10 @@ package uk.co.pragmasoft.graphdb.marshalling
 
 import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
 
-trait GraphMarshaller[T] {
-   /**
+trait GraphMarshaller[T] extends GraphMarshallingDSL {
+  type IdType
+  
+  /**
     * The class name for this vertex in Orient
     */
    def vertexClassName: String
@@ -25,6 +27,20 @@ trait GraphMarshaller[T] {
       }
    }
 
+  /**
+   * As @writeProperties but in update mode. Might not write some of the properties
+   *
+   * @param data The model object
+   * @param vertex The Orient DB Vertex
+   * @param graphDb Reference to the Orient Gratph. The transaction is handled outside this method
+   *
+   * @return
+   */
+  def updateProperties(data: T, vertex: Vertex)(implicit graphDb: TransactionalGraph): Unit = {
+    propertiesForUpdate(data) foreach { property: (String, Any) =>
+      vertex.setProperty(property._1, property._2)
+    }
+  }
 
   /**
    * Extracts the properties to use in creation mode to be written into the associated vertex
@@ -33,6 +49,14 @@ trait GraphMarshaller[T] {
    * @return
    */
    def propertiesForCreate(data: T): Set[(String, Any)]
+
+  /**
+   * Extracts the properties to use in update mode to be updated into the associated vertex
+   *
+   * @param data
+   * @return
+   */
+  def propertiesForUpdate(data: T): Set[(String, Any)]
 
    /**
     * Writes the properties of data mapped into relationships to other objects in the DB. Might create
@@ -46,16 +70,7 @@ trait GraphMarshaller[T] {
     */
    def writeRelationships(data: T, vertex: Vertex)(implicit graphDb: TransactionalGraph): Unit
 
-   /**
-    * As @writeProperties but in update mode. Might not write some of the properties
-    *
-    * @param data The model object
-    * @param vertex The Orient DB Vertex
-    * @param graphDb Reference to the Orient Gratph. The transaction is handled outside this method
-    *
-    * @return
-    */
-   def updateProperties(data: T, vertex: Vertex)(implicit graphDb: TransactionalGraph): Unit
+
 
    /**
     * As @writeRelationships in update mode
@@ -89,6 +104,6 @@ trait GraphMarshaller[T] {
     * @param obj
     * @return
     */
-   def getModelObjectID(obj: T): String
+   def getModelObjectID(obj: T): IdType
 
  }

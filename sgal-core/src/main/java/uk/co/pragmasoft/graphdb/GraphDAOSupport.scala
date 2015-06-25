@@ -1,17 +1,12 @@
 package uk.co.pragmasoft.graphdb
 
 import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
-import com.tinkerpop.blueprints.impls.orient.{OrientVertex, OrientGraph}
-import net.sf.aspect4log.slf4j.LoggerFactory
-import org.fannan.bigdata.core.inventory.persistence.orientdb.support.validation.OrientDAOValidations
-import org.fannan.bigdata.core.inventory.persistence.orientdb.support.validation.scalazed.BaseScalazValidations
 import uk.co.pragmasoft.graphdb.marshalling.GraphMarshaller
 import uk.co.pragmasoft.graphdb.validation.GraphDAOValidations
 
 trait GraphDAOSupport[T] extends CrudDAO[T]  {
 
   self: GraphDAOValidations[T] =>
-
 
   def createTransactionalGraph: TransactionalGraph
 
@@ -54,10 +49,6 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     }
   }
 
-  def getRawById[T](id: String, graphDB: TransactionalGraph, marshaller : GraphMarshaller[T]): Option[Vertex] =
-    Option(graphDB.getVertex(id))
-
-
   @throws[IllegalArgumentException]
   def validateNew(newInstance: T): Unit
 
@@ -68,7 +59,7 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
      validateNew(newInstance)
 
      withGraphDb { implicit graphDB =>
-       val newVertex = createNewVertex
+       val newVertex = createNewVertex(marshaller.getModelObjectID(newInstance))
        newInstance write newVertex
 
        // Need to close the first transaction to have the ID created valid
@@ -82,10 +73,10 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     validateUpdate(existingInstance)
 
     val updatedVertex = withGraphDb { implicit graphDB =>
-      val id = existingInstance.getOrientID
+      val id = existingInstance.getVertexId
 
       val vertexOp = getRawById(id)
-      require(vertexOp.isDefined, s"unable to update entity with Id ${existingInstance.getOrientID}. Not in the DB")
+      require(vertexOp.isDefined, s"unable to update entity with Id ${existingInstance.getVertexId}. Not in the DB")
 
       val vertex = vertexOp.get
 
@@ -99,7 +90,7 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     }
   }
 
-  def delete(id: String): Boolean = withGraphDb { implicit graphDB =>
+  def delete(id: _marshaller.IdType): Boolean = withGraphDb { implicit graphDB =>
     getRawById(id) match {
       case Some(vertex) =>
         graphDB.removeVertex(vertex)
@@ -109,35 +100,14 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     }
   }
 
-  def delete(existingInstance: T): Boolean = delete(existingInstance.getOrientID)
+  def delete(existingInstance: T): Boolean = delete(existingInstance.getVertexId)
 
-  def getById(id: String): Option[T] = readWithGraphDb { implicit graphDB =>
+  def getById(id: _marshaller.IdType): Option[T] = readWithGraphDb { implicit graphDB =>
     getRawById(id) map { _.as[T]  }
   }
 
-  def getRawById(id: String)(implicit graphDB: TransactionalGraph): Option[Vertex] = {
-    GraphDAOSupport.getRawById(id, graphDB, marshaller)
-  }
+  def getRawById(id: _marshaller.IdType)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
 
-  def createNewVertex(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(marshaller.vertexClassSpec, Array.empty[String]: _*)
+  def createNewVertex(id: Any)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(marshaller.vertexClassSpec, Array.empty[String]: _*)
 
-  def findByPropertyValue(propertyName: String, value: Any)(implicit graph: TransactionalGraph): Iterator[Vertex] = {
-    // Trying to use the indexed property, if the index is not present the query will work anyway with full scan
-    findByClassIndex(propertyName, value)
-  }
-
-  def findByClassIndex(indexName: String, value: Any)(implicit graph: TransactionalGraph): Iterator[Vertex] = {
-    findWithIndex(s"${_marshaller.vertexClassName}.$indexName", value)
-  }
-
-  def findByIndexedProperties(propertyNames: Iterable[String], values: Iterable[Any])(implicit graph: TransactionalGraph): Iterator[Vertex] = {
-    findByIndexedProperties(_marshaller.vertexClassName, propertyNames.toList, values )
-  }
-
-  def findByCompositeClassIndex(indexName: String, values: Any*)(implicit graph: TransactionalGraph): Iterator[Vertex] = {
-    findByCompositeIndex(s"${_marshaller.vertexClassName}.$indexName", values:_*)
-  }
- }
-
-
-
+}

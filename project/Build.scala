@@ -13,7 +13,8 @@ object SgalBuild extends Build {
 
     val orientClasspath =
       orientDb ++
-      scalaTest
+      scalaTest ++
+      commonsLang
 
     val root =
       Project(id = "sgal", base = file("."))
