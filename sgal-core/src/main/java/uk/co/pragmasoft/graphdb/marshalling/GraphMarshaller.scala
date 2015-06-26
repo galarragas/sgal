@@ -4,7 +4,7 @@ import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
 
 trait GraphMarshaller[T] extends GraphMarshallingDSL {
   type IdType
-  
+
   /**
     * The class name for this vertex in Orient
     */

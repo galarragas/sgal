@@ -5,5 +5,4 @@ trait CrudDAO[T] {
   def update(obj: T): T
   def delete(obj: T): Boolean
 
-  def getById(id: String): Option[T]
 }

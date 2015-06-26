@@ -8,19 +8,21 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
 
   self: GraphDAOValidations[T] =>
 
-  def createTransactionalGraph: TransactionalGraph
+  protected def createTransactionalGraph: TransactionalGraph
 
   import uk.co.pragmasoft.graphdb.marshalling.GraphMarshallingDSL._
 
   def marshaller: GraphMarshaller[T]
   implicit val _marshaller = marshaller
 
+  type IdType = _marshaller.IdType
+
   // FOR ORIENTDB THIS METHOD CAN BE USED ALSO NESTED
   // See https://github.com/orientechnologies/orientdb/wiki/Transaction-propagation about transaction propagation
   // Using pools: http://www.orientechnologies.com/new-orientdb-graph-factory/
   // We should be fine in using nested trasaction opening and committing local operations
   // https://github.com/orientechnologies/orientdb/wiki/Transactions
-  def withGraphDb[T](block : TransactionalGraph=> T): T = {
+  protected def withGraphDb[T](block : TransactionalGraph=> T): T = {
     val graphDb = createTransactionalGraph
 
     try {
@@ -37,7 +39,7 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     }
   }
 
-  def readWithGraphDb[T](block : TransactionalGraph=> T): T = {
+  protected def readWithGraphDb[T](block : TransactionalGraph=> T): T = {
     val graphDb = createTransactionalGraph
 
     try {
@@ -50,16 +52,16 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
   }
 
   @throws[IllegalArgumentException]
-  def validateNew(newInstance: T): Unit
+  protected def validateNew(newInstance: T): Unit
 
   @throws[IllegalArgumentException]
-  def validateUpdate(existingInstance: T): Unit
+  protected def validateUpdate(existingInstance: T): Unit
 
-   def create(newInstance: T): T = {
+  override def create(newInstance: T): T = {
      validateNew(newInstance)
 
      withGraphDb { implicit graphDB =>
-       val newVertex = createNewVertex(marshaller.getModelObjectID(newInstance))
+       val newVertex = createNewVertex(_marshaller.getModelObjectID(newInstance))
        newInstance write newVertex
 
        // Need to close the first transaction to have the ID created valid
@@ -69,11 +71,11 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
      }
    }
 
-  def update(existingInstance: T): T = {
+  override def update(existingInstance: T): T = {
     validateUpdate(existingInstance)
 
     val updatedVertex = withGraphDb { implicit graphDB =>
-      val id = existingInstance.getVertexId
+      val id = _marshaller.getModelObjectID(existingInstance)
 
       val vertexOp = getRawById(id)
       require(vertexOp.isDefined, s"unable to update entity with Id ${existingInstance.getVertexId}. Not in the DB")
@@ -90,7 +92,9 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     }
   }
 
-  def delete(id: _marshaller.IdType): Boolean = withGraphDb { implicit graphDB =>
+  override def delete(existingInstance: T): Boolean = deleteById(_marshaller.getModelObjectID(existingInstance))
+
+  def deleteById(id: _marshaller.IdType): Boolean = withGraphDb { implicit graphDB =>
     getRawById(id) match {
       case Some(vertex) =>
         graphDB.removeVertex(vertex)
@@ -100,14 +104,13 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     }
   }
 
-  def delete(existingInstance: T): Boolean = delete(existingInstance.getVertexId)
-
-  def getById(id: _marshaller.IdType): Option[T] = readWithGraphDb { implicit graphDB =>
+  def getById(id: IdType): Option[T] = readWithGraphDb { implicit graphDB =>
     getRawById(id) map { _.as[T]  }
   }
 
-  def getRawById(id: _marshaller.IdType)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
+  def getRawById(id: IdType)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
 
-  def createNewVertex(id: Any)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(marshaller.vertexClassSpec, Array.empty[String]: _*)
+  def createNewVertex(id: IdType)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(id)
 
+  protected def vertexFor[VertexType](element: VertexType)(implicit elementMarshaller: GraphMarshaller[VertexType], graphDb: TransactionalGraph) = graphDb.getVertex(element.getVertexId)
 }

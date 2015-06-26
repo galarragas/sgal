@@ -3,13 +3,13 @@ package uk.co.pragmasoft.graphdb.orient
 import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
 import com.tinkerpop.blueprints.impls.orient._
 import uk.co.pragmasoft.graphdb.GraphDAOSupport
-import uk.co.pragmasoft.graphdb.marshalling.GraphMarshaller
+import uk.co.pragmasoft.graphdb.marshalling.{GraphMarshallingDSL, GraphMarshaller}
 import uk.co.pragmasoft.graphdb.validation.GraphDAOValidations
 
 import scala.collection.JavaConversions._
 
 
-trait OrientDBSupport[T] extends GraphDAOSupport[T] with OrientDBBasicConversions {
+trait OrientDBSupport[T] extends GraphDAOSupport[T] with OrientDBBasicConversions with GraphMarshallingDSL {
 
   self: GraphDAOValidations[T] =>
 
@@ -18,7 +18,7 @@ trait OrientDBSupport[T] extends GraphDAOSupport[T] with OrientDBBasicConversion
   override def createTransactionalGraph: TransactionalGraph = graphFactory.getTx()
 
   //https://groups.google.com/forum/#!topic/orient-database/9lnoOeN7Y3U
-  def createQueryForNotIndexedProperty(implicit graph: OrientGraph): OrientGraphQuery = {
+  protected def createQueryForNotIndexedProperty(implicit graph: OrientGraph): OrientGraphQuery = {
     graph.query().asInstanceOf[OrientGraphQuery]
   }
 
@@ -43,12 +43,13 @@ trait OrientDBSupport[T] extends GraphDAOSupport[T] with OrientDBBasicConversion
     ).iterator()
   }
 
+  override def createNewVertex(id: IdType)(implicit graphDb: TransactionalGraph): Vertex =  {
+    val orientGraph = graphDb.asInstanceOf[OrientGraph]
 
-  /* TODO: To be implemented by extending OrientDB and expose index-optimised range queries */
-  def findWithIndexWithinRange[T](iKey: String, fromValue: T, toValue: T)(implicit graph: OrientGraph): Iterator[Vertex] = ???
+    orientGraph.addVertex(marshaller.vertexClassSpec, Array.empty[String]: _*)
+  }
 
-
-  override def getRawById[T](id: String, graphDB: TransactionalGraph, marshaller : GraphMarshaller[T]): Option[Vertex] = {
+  def getRawById[T](id: String, graphDB: TransactionalGraph, marshaller : GraphMarshaller[T]): Option[Vertex] = {
     val theVertex: OrientVertex = graphDB.getVertex(id).asInstanceOf[OrientVertex]
     if (theVertex != null && theVertex.getVertexInstance.getVertexInstance.getLabel == marshaller.vertexClassName) {
       Some(theVertex)
