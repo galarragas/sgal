@@ -1,7 +1,7 @@
 package uk.co.pragmasoft.graphdb
 
 import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
-import uk.co.pragmasoft.graphdb.marshalling.GraphMarshaller
+import uk.co.pragmasoft.graphdb.marshalling.{GraphMarshallingDSL, GraphMarshaller}
 import uk.co.pragmasoft.graphdb.validation.GraphDAOValidations
 
 trait GraphDAO[T] extends CrudDAO[T]  {
@@ -10,7 +10,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
 
   protected def createTransactionalGraph: TransactionalGraph
 
-  import uk.co.pragmasoft.graphdb.marshalling.GraphMarshallingDSL._
+  import GraphMarshallingDSL._
 
   def marshaller: GraphMarshaller[T]
   implicit val _marshaller = marshaller

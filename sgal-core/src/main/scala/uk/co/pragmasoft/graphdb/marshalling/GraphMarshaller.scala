@@ -5,12 +5,6 @@ import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
 trait GraphMarshaller[T] extends GraphMarshallingDSL {
   type IdType
 
-  /**
-    * The class name for this vertex in Orient
-    */
-   def vertexClassName: String
-
-   lazy val vertexClassSpec: String = s"class:$vertexClassName"
 
    /**
     * Writes data properties into the vertex properties. Not writing relationships
@@ -48,7 +42,7 @@ trait GraphMarshaller[T] extends GraphMarshallingDSL {
    * @param data
    * @return
    */
-   def propertiesForCreate(data: T): Set[(String, Any)]
+   protected def propertiesForCreate(data: T): Set[(String, Any)]
 
   /**
    * Extracts the properties to use in update mode to be updated into the associated vertex
@@ -56,7 +50,7 @@ trait GraphMarshaller[T] extends GraphMarshallingDSL {
    * @param data
    * @return
    */
-  def propertiesForUpdate(data: T): Set[(String, Any)]
+  protected def propertiesForUpdate(data: T): Set[(String, Any)]
 
    /**
     * Writes the properties of data mapped into relationships to other objects in the DB. Might create

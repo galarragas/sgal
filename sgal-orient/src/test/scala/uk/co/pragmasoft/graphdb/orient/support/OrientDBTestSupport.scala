@@ -3,7 +3,7 @@ package uk.co.pragmasoft.graphdb.orient.support
 import java.io._
 import java.nio.file.{Files, Path}
 
-import com.tinkerpop.blueprints.impls.orient.{OrientGraphFactory, OrientGraphNoTx}
+import com.tinkerpop.blueprints.impls.orient.{OrientGraphFactory, OrientGraph, OrientGraphNoTx}
 import org.apache.commons.lang.RandomStringUtils
 
 trait OrientDBMemoryTestSupport {
@@ -44,6 +44,15 @@ trait OrientDBMemoryTestSupport {
       orientGraphFactory.drop()
       orientGraphFactory.close()
       initFactory.close()
+    }
+  }
+  
+  def withinTx[T](block: OrientGraph => T)(implicit graphFactory: OrientGraphFactory) : T= {
+    val graph = graphFactory.getTx
+    try {
+      block(graph)
+    } finally {
+      graph.shutdown()
     }
   }
 }

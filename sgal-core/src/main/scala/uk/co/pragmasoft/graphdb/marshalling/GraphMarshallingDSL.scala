@@ -1,7 +1,7 @@
 package uk.co.pragmasoft.graphdb.marshalling
 
 import com.tinkerpop.blueprints.{Direction, Edge, TransactionalGraph, Vertex}
-import uk.co.pragmasoft.graphdb.marshalling.GraphMarshallingDSL.{PimpedAny, PimpedVertex, UnboundInputEdge, UnboundOutputEdge}
+import GraphMarshallingDSL.{PimpedAny, PimpedVertex, UnboundInputEdge, UnboundOutputEdge}
 
 import scala.language.implicitConversions
 
@@ -103,9 +103,6 @@ object GraphMarshallingDSL extends GraphMarshallingDSL {
 
    private[marshalling] class PimpedAny[T](val any: T) extends AnyVal {
      def getVertexId(implicit marshaller: GraphMarshaller[T]) = marshaller.getModelObjectID(any)
-
-     def vertexClassName(implicit marshaller: GraphMarshaller[T]) = marshaller.vertexClassName
-     def vertexClassSpec(implicit marshaller: GraphMarshaller[T]) = marshaller.vertexClassSpec
 
      def write(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
        marshaller.writeProperties(any, vertex)

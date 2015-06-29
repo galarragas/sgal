@@ -2,12 +2,11 @@ package uk.co.pragmasoft.graphdb.orient.sampledao
 
 import com.orientechnologies.orient.core.id.ORID
 import com.tinkerpop.blueprints.{Direction, TransactionalGraph, Vertex}
-import uk.co.pragmasoft.graphdb.marshalling.GraphMarshaller
-import uk.co.pragmasoft.graphdb.orient.OrientDBBasicConversions
+import uk.co.pragmasoft.graphdb.orient.{OrientDBBasicConversions, OrientGraphMarshaller}
 
 object marshallers {
 
-  implicit object MusicianMarshaller extends GraphMarshaller[Musician] with OrientDBBasicConversions {
+  implicit object MusicianMarshaller extends OrientGraphMarshaller[Musician] with OrientDBBasicConversions {
     type IdType = String
 
     override def vertexClassName: String = "musician"
@@ -44,7 +43,7 @@ object marshallers {
     override def writeRelationships(data: Musician, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {}
   }
 
-  implicit object ArtistMarshaller extends GraphMarshaller[Artist] with OrientDBBasicConversions {
+  implicit object BandMarshaller extends OrientGraphMarshaller[Band] with OrientDBBasicConversions {
     type IdType = String
 
     override def vertexClassName: String = "artist"
@@ -53,42 +52,42 @@ object marshallers {
     val NameAttribute = "name"
     val StylesAttribute = "styles"
 
-    override def getModelObjectID(artist: Artist) = artist.id
+    override def getModelObjectID(artist: Band) = artist.id
 
-    override def read(vertex: Vertex)(implicit graphDb: TransactionalGraph): Artist =
-      Artist(
+    override def read(vertex: Vertex)(implicit graphDb: TransactionalGraph): Band =
+      Band(
         vertex.getId.asInstanceOf[ORID],
         vertex.getProperty[String](NameAttribute),
-        vertex.getProperty(StylesAttribute).asInstanceOf[Seq[String]],
-        vertex.inAdjacentsForLabel[Musician](PlaysIn).toSeq
+        vertex.getProperty(StylesAttribute).asInstanceOf[Set[String]],
+        vertex.inAdjacentsForLabel[Musician](PlaysIn).toSet
       )
 
-    override def propertiesForCreate(artist: Artist) = Set(
+    override def propertiesForCreate(artist: Band) = Set(
       NameAttribute -> artist.name,
       StylesAttribute -> artist.styles
     )
 
     // Cannot update name..
-    override def propertiesForUpdate(artist: Artist) = Set(
+    override def propertiesForUpdate(artist: Band) = Set(
       StylesAttribute -> artist.styles
     )
 
-    override def writeRelationships(artist: Artist, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
+    override def writeRelationships(artist: Band, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
       artist.musicians.foreach { musician =>
         vertex.addInEdgeFrom(musician, PlaysIn)
       }
     }
 
-    override def updateRelationships(artist: Artist, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
+    override def updateRelationships(artist: Band, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
       vertex.removeEdges(PlaysIn, Direction.IN )
 
       artist.musicians.foreach { musician =>
-        vertex --> PlaysIn --> musician
+        vertex <-- PlaysIn <-- musician
       }
     }
   }
 
-  implicit object FanMarshaller extends GraphMarshaller[Fan] with OrientDBBasicConversions {
+  implicit object FanMarshaller extends OrientGraphMarshaller[Fan] with OrientDBBasicConversions {
     type IdType = String
 
     override def vertexClassName: String = "fan"
@@ -131,7 +130,7 @@ object marshallers {
         id = vertex.getId.asInstanceOf[ORID],
         name = vertex.getProperty[String](NameAttribute),
         age = vertex.getProperty[Int](AgeAttribute),
-        fanOf = vertex.outAdjacentsForLabel[Artist](Adores).toSeq
+        fanOf = vertex.outAdjacentsForLabel[Band](Adores).toSet
       )
   }
 }

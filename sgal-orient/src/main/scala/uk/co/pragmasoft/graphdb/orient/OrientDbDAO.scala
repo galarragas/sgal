@@ -5,6 +5,7 @@ import com.tinkerpop.blueprints.impls.orient._
 import uk.co.pragmasoft.graphdb.GraphDAO
 import uk.co.pragmasoft.graphdb.marshalling.{GraphMarshallingDSL, GraphMarshaller}
 import uk.co.pragmasoft.graphdb.validation.GraphDAOValidations
+import uk.co.pragmasoft.graphdb.marshalling.GraphMarshallingDSL
 
 import scala.collection.JavaConversions._
 
@@ -13,9 +14,11 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
 
   self: GraphDAOValidations[T] =>
 
+  override def marshaller: OrientGraphMarshaller[T]
+
   def graphFactory: OrientGraphFactory
 
-  override def createTransactionalGraph: TransactionalGraph = graphFactory.getTx()
+  override protected def createTransactionalGraph: TransactionalGraph = graphFactory.getTx()
 
   //https://groups.google.com/forum/#!topic/orient-database/9lnoOeN7Y3U
   protected def createQueryForNotIndexedProperty(implicit graph: OrientGraph): OrientGraphQuery = {
@@ -23,19 +26,19 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
   }
 
 
-  def findVertexesOfClassByIndexedProperty(className: String, propertyName: String, value: Any)(implicit graph: OrientGraph): Iterator[Vertex] = {
+  protected def findVertexesOfClassByIndexedProperty(className: String, propertyName: String, value: Any)(implicit graph: OrientGraph): Iterator[Vertex] = {
     findWithIndex(s"$className.$propertyName", value)
   }
 
-  def findWithIndex(indexFullName: String, value: Any)(implicit graph: OrientGraph): Iterator[Vertex] = {
+  protected def findWithIndex(indexFullName: String, value: Any)(implicit graph: OrientGraph): Iterator[Vertex] = {
     graph.getVertices(indexFullName, value).iterator()
   }
 
-  def findByCompositeIndex(indexFullName: String, values: Any*)(implicit graph: OrientGraph): Iterator[Vertex] = {
+  protected def findByCompositeIndex(indexFullName: String, values: Any*)(implicit graph: OrientGraph): Iterator[Vertex] = {
     graph.getVertices(indexFullName, seqAsJavaList(values.toSeq) ).iterator()
   }
 
-  def findByIndexedProperties(className: String, propertyNames: Iterable[String], values: Iterable[Any])(implicit graph: OrientGraph): Iterator[Vertex] = {
+  protected def findByIndexedProperties(className: String, propertyNames: Iterable[String], values: Iterable[Any])(implicit graph: OrientGraph): Iterator[Vertex] = {
     graph.getVertices(
       className,
       Array(propertyNames.toList:_*),
@@ -57,7 +60,7 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
     orientGraph.addVertex(marshaller.vertexClassSpec, Array.empty[String]: _*)
   }
 
-  protected def getRawById[T](id: String, graphDB: TransactionalGraph, marshaller : GraphMarshaller[T]): Option[Vertex] = {
+  protected def getRawById[T](id: String, graphDB: TransactionalGraph): Option[Vertex] = {
     val theVertex: OrientVertex = graphDB.getVertex(id).asInstanceOf[OrientVertex]
     if (theVertex != null && theVertex.getVertexInstance.getVertexInstance.getLabel == marshaller.vertexClassName) {
       Some(theVertex)
