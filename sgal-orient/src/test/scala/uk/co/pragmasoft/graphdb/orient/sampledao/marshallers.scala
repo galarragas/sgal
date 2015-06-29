@@ -49,7 +49,7 @@ object marshallers {
 
     override def vertexClassName: String = "artist"
 
-    val PlaysInLabel = "plays-in"
+    val PlaysIn = "plays-in"
     val NameAttribute = "name"
     val StylesAttribute = "styles"
 
@@ -60,7 +60,7 @@ object marshallers {
         vertex.getId.asInstanceOf[ORID],
         vertex.getProperty[String](NameAttribute),
         vertex.getProperty(StylesAttribute).asInstanceOf[Seq[String]],
-        vertex.inAdjacentsForLabel[Musician](PlaysInLabel).toSeq
+        vertex.inAdjacentsForLabel[Musician](PlaysIn).toSeq
       )
 
     override def propertiesForCreate(artist: Artist) = Set(
@@ -75,15 +75,15 @@ object marshallers {
 
     override def writeRelationships(artist: Artist, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
       artist.musicians.foreach { musician =>
-        vertex.addInEdgeFrom(musician, PlaysInLabel)
+        vertex.addInEdgeFrom(musician, PlaysIn)
       }
     }
 
     override def updateRelationships(artist: Artist, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
-      vertex.removeEdges(PlaysInLabel, Direction.IN )
+      vertex.removeEdges(PlaysIn, Direction.IN )
 
       artist.musicians.foreach { musician =>
-        vertex.addInEdgeFrom(musician, PlaysInLabel)
+        vertex --> PlaysIn --> musician
       }
     }
   }
@@ -93,21 +93,21 @@ object marshallers {
 
     override def vertexClassName: String = "fan"
 
-    val AdoresLabel = "adores"
+    val Adores = "adores"
     val NameAttribute = "name"
     val AgeAttribute = "age"
 
-    override def writeRelationships(data: Fan, vertex: Vertex)(implicit graphDb: TransactionalGraph): Unit = {
-      vertex.removeEdges(AdoresLabel)
+    override def writeRelationships(fanData: Fan, fanVertex: Vertex)(implicit graphDb: TransactionalGraph): Unit = {
+      fanVertex.removeEdges(Adores)
 
-      data.fanOf foreach { artist =>
-        vertex.addOutEdgeTo(artist, AdoresLabel)
+      fanData.fanOf foreach { artist =>
+        fanVertex --> Adores --> artist
       }
     }
 
-    override def updateRelationships(data: Fan, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
-      data.fanOf foreach { artist =>
-        vertex.addOutEdgeTo(artist, AdoresLabel)
+    override def updateRelationships(fanData: Fan, fanVertex: Vertex)(implicit graphDb: TransactionalGraph) = {
+      fanData.fanOf foreach { artist =>
+        fanVertex --> Adores --> artist
       }
     }
 
@@ -131,7 +131,7 @@ object marshallers {
         id = vertex.getId.asInstanceOf[ORID],
         name = vertex.getProperty[String](NameAttribute),
         age = vertex.getProperty[Int](AgeAttribute),
-        fanOf = vertex.outAdjacentsForLabel[Artist](AdoresLabel).toSeq
+        fanOf = vertex.outAdjacentsForLabel[Artist](Adores).toSeq
       )
   }
 }

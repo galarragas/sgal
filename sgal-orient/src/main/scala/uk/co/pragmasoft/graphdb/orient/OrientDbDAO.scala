@@ -2,14 +2,14 @@ package uk.co.pragmasoft.graphdb.orient
 
 import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
 import com.tinkerpop.blueprints.impls.orient._
-import uk.co.pragmasoft.graphdb.GraphDAOSupport
+import uk.co.pragmasoft.graphdb.GraphDAO
 import uk.co.pragmasoft.graphdb.marshalling.{GraphMarshallingDSL, GraphMarshaller}
 import uk.co.pragmasoft.graphdb.validation.GraphDAOValidations
 
 import scala.collection.JavaConversions._
 
 
-trait OrientDBSupport[T] extends GraphDAOSupport[T] with OrientDBBasicConversions with GraphMarshallingDSL {
+trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with GraphMarshallingDSL {
 
   self: GraphDAOValidations[T] =>
 
@@ -43,13 +43,21 @@ trait OrientDBSupport[T] extends GraphDAOSupport[T] with OrientDBBasicConversion
     ).iterator()
   }
 
-  override def createNewVertex(id: IdType)(implicit graphDb: TransactionalGraph): Vertex =  {
+
+  /**
+   * The ID in Orient can be used to specify the vertex class type
+   *
+   * @param id
+   * @param graphDb
+   * @return
+   */
+  override protected def createNewVertex(id: Any)(implicit graphDb: TransactionalGraph): Vertex =  {
     val orientGraph = graphDb.asInstanceOf[OrientGraph]
 
     orientGraph.addVertex(marshaller.vertexClassSpec, Array.empty[String]: _*)
   }
 
-  def getRawById[T](id: String, graphDB: TransactionalGraph, marshaller : GraphMarshaller[T]): Option[Vertex] = {
+  protected def getRawById[T](id: String, graphDB: TransactionalGraph, marshaller : GraphMarshaller[T]): Option[Vertex] = {
     val theVertex: OrientVertex = graphDB.getVertex(id).asInstanceOf[OrientVertex]
     if (theVertex != null && theVertex.getVertexInstance.getVertexInstance.getLabel == marshaller.vertexClassName) {
       Some(theVertex)

@@ -32,7 +32,10 @@ class OrientDBSupportSpec extends FlatSpec with Matchers with OrientDBMemoryTest
   }
 
   protected def writeVertex(id: Any, properties: Map[String, Any])(implicit orientGraphFactory: OrientGraphFactory): ORID = withTxDb { graph =>
-    val created = graph.addVertex(id, properties)
+    val created = graph.addVertex(id, Array(): _*)
+    properties.foreach { case (key, value) =>
+      created.setProperty(key, value)
+    }
 
     created.getIdentity
   }
@@ -53,12 +56,26 @@ class OrientDBSupportSpec extends FlatSpec with Matchers with OrientDBMemoryTest
 
   it should "Read an object from the DB given its ID" in withInMemoryOrientGraphDB { implicit graphFactory =>
 
-    writeVertex("1", Map( "name" -> "Brian May", "instrument" -> "guitar" ) )
+    val vertexId = writeVertex("1", Map( "name" -> "Brian May", "instrument" -> "guitar" ) )
 
     val musicianDao = new MusicianDao(graphFactory)
 
-    val musicianMaybe = musicianDao.getById("1")
+    val musicianMaybe = musicianDao.getById(vertexId)
 
-    musicianMaybe should be (Some(Musician("1", "Brian May", "guitar")))
+    musicianMaybe should be (Some(Musician(vertexId.toString, "Brian May", "guitar")))
+  }
+
+  it should "update updatable properties ignoring the others" in withInMemoryOrientGraphDB { implicit graphFactory =>
+
+    val musicianDao = new MusicianDao(graphFactory)
+
+    val created = musicianDao.create( Musician("", "Brian May", "guitar, piano, ukulele") )
+
+    val updated = musicianDao.update( created.copy( name = "This should be ignored", instrument = "red special" ) )
+
+    updated should be ( created.copy(instrument = "red special" ) )
+  }
+
+  it should "update relationships" in withInMemoryOrientGraphDB { implicit graphFactory =>
   }
 }

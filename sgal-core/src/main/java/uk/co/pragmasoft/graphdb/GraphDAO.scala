@@ -4,7 +4,7 @@ import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
 import uk.co.pragmasoft.graphdb.marshalling.GraphMarshaller
 import uk.co.pragmasoft.graphdb.validation.GraphDAOValidations
 
-trait GraphDAOSupport[T] extends CrudDAO[T]  {
+trait GraphDAO[T] extends CrudDAO[T]  {
 
   self: GraphDAOValidations[T] =>
 
@@ -14,8 +14,6 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
 
   def marshaller: GraphMarshaller[T]
   implicit val _marshaller = marshaller
-
-  type IdType = _marshaller.IdType
 
   // FOR ORIENTDB THIS METHOD CAN BE USED ALSO NESTED
   // See https://github.com/orientechnologies/orientdb/wiki/Transaction-propagation about transaction propagation
@@ -104,13 +102,13 @@ trait GraphDAOSupport[T] extends CrudDAO[T]  {
     }
   }
 
-  def getById(id: IdType): Option[T] = readWithGraphDb { implicit graphDB =>
+  def getById(id: Any): Option[T] = readWithGraphDb { implicit graphDB =>
     getRawById(id) map { _.as[T]  }
   }
 
-  def getRawById(id: IdType)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
+  def getRawById(id: Any)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
 
-  def createNewVertex(id: IdType)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(id)
+  protected def createNewVertex(id: Any)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(id)
 
   protected def vertexFor[VertexType](element: VertexType)(implicit elementMarshaller: GraphMarshaller[VertexType], graphDb: TransactionalGraph) = graphDb.getVertex(element.getVertexId)
 }
