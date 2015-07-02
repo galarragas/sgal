@@ -9,6 +9,7 @@ object SgalBuild extends Build {
     val coreClasspath =
       gremlinScala ++
       scalaTest ++
+      mockito ++
       valiData
 
     val orientClasspath =

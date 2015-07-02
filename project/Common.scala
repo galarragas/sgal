@@ -55,6 +55,8 @@ object Common {
     "org.scalatest" %% "scalatest" % "2.2.2" % "test"
   )
 
+
+  val mockito = Seq("org.mockito" % "mockito-core" % "1.9.5" % "test")
   
   val commonsCollections = Seq(
     "commons-collections" % "commons-collections" % "3.2"

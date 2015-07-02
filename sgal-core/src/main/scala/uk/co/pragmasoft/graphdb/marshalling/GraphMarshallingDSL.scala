@@ -91,7 +91,7 @@ object GraphMarshallingDSL extends GraphMarshallingDSL {
   }
 
   class HalfBoundInputEdge(label: String, head: Vertex) {
-    def connectTo[EdgeTailType](tail: EdgeTailType)(implicit graphDb: TransactionalGraph, targetMarshaller: GraphMarshaller[EdgeTailType]): Edge = new PimpedVertex(head).addOutEdgeTo(tail, label)
+    def connectTo[EdgeTailType](tail: EdgeTailType)(implicit graphDb: TransactionalGraph, targetMarshaller: GraphMarshaller[EdgeTailType]): Edge = new PimpedVertex(head).addInEdgeFrom(tail, label)
     def <--[EdgeTailType](tail: EdgeTailType)(implicit graphDb: TransactionalGraph, targetMarshaller: GraphMarshaller[EdgeTailType]): Edge = connectTo(tail)
   }
 
@@ -114,19 +114,19 @@ object GraphMarshallingDSL extends GraphMarshallingDSL {
        marshaller.updateRelationships(any, vertex)
      }
 
-     def writeProperties(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
+     def writePropertiesTo(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
        marshaller.writeProperties(any, vertex)
      }
 
-     def writeRelationships(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
+     def writeRelationshipsTo(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
        marshaller.writeRelationships(any, vertex)
      }
 
-     def updateProperties(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
+     def updatePropertiesTo(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
        marshaller.updateProperties(any, vertex)
      }
 
-     def updateRelationships(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
+     def updateRelationshipsTo(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
        marshaller.updateRelationships(any, vertex)
      }
    }

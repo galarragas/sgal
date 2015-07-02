@@ -49,12 +49,6 @@ trait GraphDAO[T] extends CrudDAO[T]  {
     }
   }
 
-  @throws[IllegalArgumentException]
-  protected def validateNew(newInstance: T): Unit
-
-  @throws[IllegalArgumentException]
-  protected def validateUpdate(existingInstance: T): Unit
-
   override def create(newInstance: T): T = {
      validateNew(newInstance)
 

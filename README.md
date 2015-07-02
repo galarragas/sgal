@@ -84,6 +84,38 @@ class BandDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO
 }
 ```
 
+## Validation
+
+The DAO trait is validating objects before writing and updates. Validation can be implemented as you wish and only need to throw an 
+`IllegalArgumentException` when the object is considered invalid as per the `GraphDAOValidations` interface:
+
+```scala
+trait GraphDAOValidations[T] {
+  /**
+   * Validates an object before writing it as a new instance
+   * 
+   * @param newInstance
+   * @throws IllegalArgumentException if the object is invalid
+   * @return
+   */
+  @throws[IllegalArgumentException]
+  def validateNew(newInstance: T): T
+
+  /**
+   * Validates an object before writing it as an already existing instance
+   *
+   * @param updatedInstance
+   * @throws IllegalArgumentException if the object is invalid
+   * @return
+   */
+  @throws[IllegalArgumentException]
+  def validateUpdate(updatedInstance: T): T
+}
+```
+
+An already available implementation of the validation is based on the [ValiData project](https://github.com/galarragas/ValiData)
+and allows you to specify the data validations with a simple DSL.
+
 ## License
 
 Copyright 2014 PragmaSoft Ltd.
