@@ -1,5 +1,7 @@
 # sgal: Scala Graph Access Layer
 
+[![Build Status](https://api.travis-ci.org/galarragas/sgal.png)](http://travis-ci.org/galarragas/sgal)
+
 ## What is It?
 
 The idea behind this project is to provide a set of common functionnalities and some very basic guidance when writing 

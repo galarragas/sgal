@@ -28,6 +28,12 @@ object SgalBuild extends Build {
         publishMavenStyle := true,
         libraryDependencies ++= coreClasspath
       )
+      .settings(
+        ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 70,
+        ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true
+      )
+      .testReportConfig
+
 
   lazy val orient =
     module("orient")
@@ -37,11 +43,8 @@ object SgalBuild extends Build {
       )
       .settings(
         ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 70,
-        ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true,
+        ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := false,
         fork := true
-      )
-      .settings(// Build info config
-        buildInfoSettings: _*
       )
       .settings(
         javaOptions in Test ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
