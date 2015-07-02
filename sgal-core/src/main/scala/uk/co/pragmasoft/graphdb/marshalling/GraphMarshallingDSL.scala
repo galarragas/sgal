@@ -17,7 +17,7 @@ object GraphMarshallingDSL extends GraphMarshallingDSL {
 
      def as[T](implicit reader: GraphMarshaller[T], graph: TransactionalGraph) : T =  reader.readFrom(vertex)(graph)
 
-     def addEdges(label: String, inVertexes: Vertex*) = inVertexes.map(vertex.addEdge(label, _))
+     def addOutEdges(label: String, inVertexes: Vertex*) = inVertexes.map(vertex.addEdge(label, _))
 
      def removeEdges(label: String, direction: Direction = Direction.OUT) = {
        val edges = vertex.getEdges(direction, label)
