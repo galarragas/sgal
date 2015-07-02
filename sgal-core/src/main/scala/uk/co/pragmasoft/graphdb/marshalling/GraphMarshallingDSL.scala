@@ -15,7 +15,7 @@ object GraphMarshallingDSL extends GraphMarshallingDSL {
    class PimpedVertex(val vertex: Vertex) extends AnyVal {
      import scala.collection.JavaConversions._
 
-     def as[T](implicit reader: GraphMarshaller[T], graph: TransactionalGraph) : T =  reader.read(vertex)(graph)
+     def as[T](implicit reader: GraphMarshaller[T], graph: TransactionalGraph) : T =  reader.readFrom(vertex)(graph)
 
      def addEdges(label: String, inVertexes: Vertex*) = inVertexes.map(vertex.addEdge(label, _))
 
@@ -104,12 +104,12 @@ object GraphMarshallingDSL extends GraphMarshallingDSL {
    private[marshalling] class PimpedAny[T](val any: T) extends AnyVal {
      def getVertexId(implicit marshaller: GraphMarshaller[T]) = marshaller.getModelObjectID(any)
 
-     def write(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
+     def writeTo(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
        marshaller.writeProperties(any, vertex)
        marshaller.writeRelationships(any, vertex)
      }
 
-     def update(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
+     def updateTo(vertex: Vertex)(implicit marshaller: GraphMarshaller[T], graphDb: TransactionalGraph): Unit = {
        marshaller.updateProperties(any, vertex)
        marshaller.updateRelationships(any, vertex)
      }

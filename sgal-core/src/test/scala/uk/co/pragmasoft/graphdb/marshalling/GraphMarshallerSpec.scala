@@ -52,7 +52,7 @@ class GraphMarshallerSpec extends FlatSpec with Matchers with MockitoSugar {
     }
 
 
-    override def read(vertex: Vertex)(implicit graphDb: TransactionalGraph): TestEdge = {
+    override def readFrom(vertex: Vertex)(implicit graphDb: TransactionalGraph): TestEdge = {
       implicit val targetRelationshipMarshaller = this
 
       TestEdge(

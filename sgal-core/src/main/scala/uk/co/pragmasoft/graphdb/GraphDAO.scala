@@ -54,7 +54,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
 
      withGraphDb { implicit graphDB =>
        val newVertex = createNewVertex(_marshaller.getModelObjectID(newInstance))
-       newInstance write newVertex
+       newInstance writeTo newVertex
 
        // Need to close the first transaction to have the ID created valid
        graphDB.commit()
@@ -74,7 +74,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
 
       val vertex = vertexOp.get
 
-      existingInstance update vertex
+      existingInstance updateTo vertex
 
       vertex
     }

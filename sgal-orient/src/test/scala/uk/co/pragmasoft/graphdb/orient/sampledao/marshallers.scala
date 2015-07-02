@@ -28,7 +28,7 @@ object marshallers {
         InstrumentAttribute -> musician.instrument
       )
 
-    override def read(vertex: Vertex)(implicit graphDb: TransactionalGraph) =
+    override def readFrom(vertex: Vertex)(implicit graphDb: TransactionalGraph) =
       Musician(
         id = vertex.getId.asInstanceOf[ORID],
         name = vertex.getProperty[String](NameAttribute),
@@ -54,7 +54,7 @@ object marshallers {
 
     override def getModelObjectID(artist: Band) = artist.id
 
-    override def read(vertex: Vertex)(implicit graphDb: TransactionalGraph): Band =
+    override def readFrom(vertex: Vertex)(implicit graphDb: TransactionalGraph): Band =
       Band(
         vertex.getId.asInstanceOf[ORID],
         vertex.getProperty[String](NameAttribute),
@@ -125,7 +125,7 @@ object marshallers {
     override def getModelObjectID(fan: Fan) = fan.id
 
 
-    override def read(vertex: Vertex)(implicit graphDb: TransactionalGraph) =
+    override def readFrom(vertex: Vertex)(implicit graphDb: TransactionalGraph) =
       Fan(
         id = vertex.getId.asInstanceOf[ORID],
         name = vertex.getProperty[String](NameAttribute),

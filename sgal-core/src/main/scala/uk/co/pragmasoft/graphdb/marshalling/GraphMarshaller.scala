@@ -83,7 +83,7 @@ trait GraphMarshaller[T] extends GraphMarshallingDSL {
     * @param graphDb
     * @return
     */
-   def read(vertex: Vertex)(implicit graphDb: TransactionalGraph): T
+   def readFrom(vertex: Vertex)(implicit graphDb: TransactionalGraph): T
 
   /**
    * Maps the content of an Option[Vertex] @vertex (including relationships) into a new Option of the model object
@@ -91,7 +91,7 @@ trait GraphMarshaller[T] extends GraphMarshallingDSL {
    * @param graphDb
    * @return
    */
-  def readMaybe(vertexMaybe: Option[Vertex])(implicit graphDb: TransactionalGraph): Option[T] =  vertexMaybe map { read }
+  def readMaybe(vertexMaybe: Option[Vertex])(implicit graphDb: TransactionalGraph): Option[T] =  vertexMaybe map { readFrom }
 
   /**
     * Extracts the OrientDB ID from a model object

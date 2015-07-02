@@ -67,6 +67,22 @@ A Marshaller looks like the following code
   }
 ```
 
+## Directly Using the Marshaller
+
+Once you defined the marshaller for your types you can start writing expressions as 
+ 
+```scala
+entity writeTo vertex
+
+entity updateTo vertex
+
+entity readFrom vertex
+
+entity readMaybe vertexMaybe
+```
+
+## Creating a Data Access Object
+
 Using the given marshaller you can create a CRUD supporting DAO with an extra query method with the following code (OrientDB specific)
 
 ```scala

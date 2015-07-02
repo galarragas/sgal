@@ -15,7 +15,7 @@ class MarshallerSpec extends FlatSpec with Matchers with OrientDBMemoryTestSuppo
     val id = writeVertex("", Map( MusicianMarshaller.NameAttribute -> "Brian May", MusicianMarshaller.InstrumentAttribute -> "guitar" ) )
 
     withinTx { implicit graph =>
-      MusicianMarshaller.read(readVertex(id).get) should be(Musician(id.toString, "Brian May", "guitar"))
+      MusicianMarshaller.readFrom(readVertex(id).get) should be(Musician(id.toString, "Brian May", "guitar"))
     }
   }
 
