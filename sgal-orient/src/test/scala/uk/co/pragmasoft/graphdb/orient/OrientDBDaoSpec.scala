@@ -8,9 +8,9 @@ import uk.co.pragmasoft.graphdb.orient.support.{MusicFixtureDBSupport, OrientDBM
 
 
 
-class GraphDaoSpec extends FlatSpec with Matchers with OrientDBMemoryTestSupport with MusicFixtureDBSupport {
+class OrientDBDaoSpec extends FlatSpec with Matchers with OrientDBMemoryTestSupport with MusicFixtureDBSupport {
 
-  behavior of "Dao Object"
+  behavior of "Orient DB Dao Object"
 
   it should "Write an object in the DB returning its ID" in withInMemoryOrientGraphDB { implicit graphFactory =>
 

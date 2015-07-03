@@ -50,4 +50,11 @@ class MarshallerSpec extends FlatSpec with Matchers with OrientDBMemoryTestSuppo
     }
   }
 
+  it should "allow to access vertex class name and vertex spec name of an entity, given its marshaller" in {
+    import OrientGraphDSL._
+
+    Musician("id", "name", "instrument").vertexClassName should be(MusicianMarshaller.vertexClassName)
+    Musician("id", "name", "instrument").vertexClassSpec should be(MusicianMarshaller.vertexClassSpec)
+  }
+
 }
