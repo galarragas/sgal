@@ -11,10 +11,11 @@ class FanDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO[
   override def marshaller = FanMarshaller
 
   def findBySupportedArtist(band: Band): Iterable[Fan] = withGraphDb { implicit db =>
-    vertexFor(band)
-      .in(marshaller.Adores)
-      .map { vertex => vertex.as[Fan] }
-      .toStream()
+    vertexFor(band).fold(Stream.empty[Fan]) { vertex =>
+      vertex.in(marshaller.Adores)
+        .map( _.as[Fan] )
+        .toStream()
+    }
   }
 
 }
@@ -24,10 +25,11 @@ class BandDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO
   override def marshaller = BandMarshaller
   
   def findByMusician(musician: Musician): Iterable[Band] = withGraphDb { implicit db =>
-    vertexFor(musician)
-      .out(marshaller.PlaysIn)
-      .map { vertex => vertex.as[Band] }
-      .toStream()
+    vertexFor(musician).fold(Stream.empty[Band]) { vertex =>
+      vertex.out(marshaller.PlaysIn)
+        .map( _.as[Band] )
+        .toStream()
+    }
   }
 
 }

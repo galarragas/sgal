@@ -104,5 +104,6 @@ trait GraphDAO[T] extends CrudDAO[T]  {
 
   protected def createNewVertex(id: Any)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(id)
 
-  protected def vertexFor[VertexType](element: VertexType)(implicit elementMarshaller: GraphMarshaller[VertexType], graphDb: TransactionalGraph) = graphDb.getVertex(element.getVertexId)
+  protected def vertexFor[VertexType](element: VertexType)(implicit elementMarshaller: GraphMarshaller[VertexType], graphDb: TransactionalGraph): Option[Vertex] =
+    Option( graphDb.getVertex(element.getVertexId) )
 }

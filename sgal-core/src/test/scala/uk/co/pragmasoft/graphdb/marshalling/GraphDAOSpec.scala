@@ -1,18 +1,18 @@
 package uk.co.pragmasoft.graphdb.marshalling
 
-import java.util
-
-import com.tinkerpop.blueprints.{Edge, Direction, Vertex, TransactionalGraph}
-import org.mockito.Mockito.{when, verify, verifyNoMoreInteractions}
-import org.mockito.Matchers.{eq => argEq, any => anyArg, anyString}
+import com.tinkerpop.blueprints.{Edge, TransactionalGraph, Vertex}
+import org.mockito.Matchers.{any => anyArg, anyString, eq => argEq}
+import org.mockito.Mockito.{verify, when}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
-import uk.co.pragmasoft.graphdb.validation.NoValidations
-import TestVertexMarshaller._
+import uk.co.pragmasoft.graphdb.validation.{ValiDataValidations, GraphDAOValidations, NoValidations}
+import uk.co.pragmasoft.validate.{DataValidationFunction, BaseValidations, TypeValidator}
+
+import scala.collection.mutable
 
 class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
-  val EmptyEdgeList = new util.ArrayList[Edge]()
-  val EmptyVertexList = new util.ArrayList[Vertex]()
+  val EmptyEdgeList = new java.util.ArrayList[Edge]()
+  val EmptyVertexList = new java.util.ArrayList[Vertex]()
 
   behavior of "GrapDAO"
 
@@ -121,5 +121,97 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
 
     (dao getById "key") should be(None)
+  }
+
+
+  it should "validate on creation" in {
+    val graph = mock[TransactionalGraph]
+    val marshaller = mock[GraphMarshaller[TestVertex]]
+
+    val dao = new TestVertexDao(graph, marshaller) with RecordingValidations[TestVertex]
+
+    val entity = TestVertex("key", 1, None, Set.empty)
+
+    dao create entity
+
+    dao.validatedForCreate.toList should be(List(entity))
+  }
+
+  it should "validate on update" in {
+    val graph = mock[TransactionalGraph]
+    val marshaller = mock[GraphMarshaller[TestVertex]]
+    val vertex = mock[Vertex]
+
+    val dao = new TestVertexDao(graph, marshaller) with RecordingValidations[TestVertex]
+
+    val entity = TestVertex("key", 1, None, Set.empty)
+
+    when(graph.getVertex(anyString)) thenReturn vertex
+
+    dao update entity
+
+    dao.validatedForUpdate.toList should be(List(entity))
+  }
+
+  it should "fail if validate on creation fails" in {
+    val graph = mock[TransactionalGraph]
+    val marshaller = mock[GraphMarshaller[TestVertex]]
+
+    val dao = new TestVertexDao(graph, marshaller) with FailingValidations[TestVertex]
+
+    intercept[IllegalArgumentException] {
+      dao create TestVertex("key", 1, None, Set.empty)
+    }
+  }
+
+  it should "fail if validate on update fails" in {
+    val graph = mock[TransactionalGraph]
+    val marshaller = mock[GraphMarshaller[TestVertex]]
+    val vertex = mock[Vertex]
+
+    val dao = new TestVertexDao(graph, marshaller) with FailingValidations[TestVertex]
+
+    when(graph.getVertex(anyString)) thenReturn vertex
+
+    intercept[IllegalArgumentException] {
+      dao update TestVertex("key", 1, None, Set.empty)
+    }
+  }
+
+  trait RecordingValidations[T] extends GraphDAOValidations[T] {
+
+    val validatedForCreate: mutable.Buffer[T] = mutable.Buffer.empty[T]
+    val validatedForUpdate: mutable.Buffer[T] = mutable.Buffer.empty[T]
+
+    override def validateUpdate(updatedInstance: T): T = {
+      validatedForUpdate append updatedInstance
+
+      updatedInstance
+    }
+
+    override def validateNew(newInstance: T): T = {
+      validatedForCreate append newInstance
+
+      newInstance
+    }
+  }
+
+  trait FailingValidations[T] extends GraphDAOValidations[T] {
+   override def validateUpdate(updatedInstance: T): T = throw new IllegalArgumentException("expected exception for test purposes")
+
+    override def validateNew(newInstance: T): T = throw new IllegalArgumentException("expected exception for test purposes")
+  }
+
+  trait TestVertexValiDataValidations extends ValiDataValidations[TestVertex] {
+
+    override val newInstanceValidator = new TypeValidator[TestVertex] with BaseValidations {
+      override def validations =
+        ( "Key" definedBy { _.key } must beNotEmpty ) and ( "Property" definedBy { _.property} must bePositive[Int] )
+    }
+
+    override val updatedInstanceValidator = new TypeValidator[TestVertex] with BaseValidations {
+      override def validations =
+        "Property" definedBy { _.property} must bePositive[Int]
+    }
   }
 }

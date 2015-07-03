@@ -6,9 +6,9 @@ import uk.co.pragmasoft.validate.TypeValidator
 import scalaz._
 
 trait ValiDataValidations[T] extends GraphDAOValidations[T] {
-  def newInstanceValidator: TypeValidator[T]
-  
-  def updatedInstanceValidator: TypeValidator[T]
+  protected def newInstanceValidator: TypeValidator[T]
+
+  protected def updatedInstanceValidator: TypeValidator[T]
 
   private def printValidationErrors(validationErrors: NonEmptyList[String]): String = validationErrors.list.mkString("[", ",", "]")
 

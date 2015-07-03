@@ -93,11 +93,12 @@ class BandDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO
   override def marshaller = BandMarshaller
   
   def findByMusician(musician: Musician): Iterable[Band] = withGraphDb { implicit db =>
-    vertexFor(musician)
-      .out(marshaller.PlaysIn)
-      .map { vertex => vertex.as[Band] }
-      .toStream()
-  }
+      vertexFor(musician).fold(Stream.empty[Band]) { vertex =>
+        vertex.out(marshaller.PlaysIn)
+          .map( _.as[Band] )
+          .toStream()
+      }
+    }
 
 }
 ```
@@ -132,7 +133,22 @@ trait GraphDAOValidations[T] {
 ```
 
 An already available implementation of the validation is based on the [ValiData project](https://github.com/galarragas/ValiData)
-and allows you to specify the data validations with a simple DSL.
+and allows you to specify the data validations with a simple DSL as per the example below:
+
+```scala
+trait TestVertexValiDataValidations extends ValiDataValidations[TestVertex] {
+
+    override val newInstanceValidator = new TypeValidator[TestVertex] with BaseValidations {
+      override def validations =
+        ( "Key" definedBy { _.key } must beNotEmpty ) and ( "Property" definedBy { _.property} must bePositive[Int] )
+    }
+
+    override val updatedInstanceValidator = new TypeValidator[TestVertex] with BaseValidations {
+      override def validations =
+        "Property" definedBy { _.property} must bePositive[Int]
+    }
+  }
+```
 
 ## License
 
