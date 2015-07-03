@@ -47,7 +47,7 @@ object SgalBuild extends Build {
         fork := true
       )
       .settings(
-        javaOptions in Test ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+        javaOptions in Test ++= Seq("-Xms512M", "-Xmx2048M")
       )
       .testReportConfig
       .dependsOn(core)
