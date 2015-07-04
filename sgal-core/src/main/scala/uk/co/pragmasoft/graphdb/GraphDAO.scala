@@ -69,7 +69,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
     val updatedVertex = withGraphDb { implicit graphDB =>
       val id = _marshaller.getModelObjectID(existingInstance)
 
-      val vertexOp = getRawById(id)
+      val vertexOp = getAsVertexById(id)
       require(vertexOp.isDefined, s"unable to update entity with Id ${existingInstance.getVertexId}. Not in the DB")
 
       val vertex = vertexOp.get
@@ -87,7 +87,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
   override def delete(existingInstance: T): Boolean = deleteById(_marshaller.getModelObjectID(existingInstance))
 
   def deleteById(id: _marshaller.IdType): Boolean = withGraphDb { implicit graphDB =>
-    getRawById(id) match {
+    getAsVertexById(id) match {
       case Some(vertex) =>
         graphDB.removeVertex(vertex)
         true
@@ -97,10 +97,10 @@ trait GraphDAO[T] extends CrudDAO[T]  {
   }
 
   def getById(id: Any): Option[T] = readWithGraphDb { implicit graphDB =>
-    getRawById(id) map { _.as[T]  }
+    getAsVertexById(id) map { _.as[T]  }
   }
 
-  def getRawById(id: Any)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
+  def getAsVertexById(id: Any)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
 
   protected def createNewVertex(id: Any)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(id)
 

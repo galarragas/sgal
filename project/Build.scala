@@ -42,8 +42,8 @@ object SgalBuild extends Build {
         publishMavenStyle := true
       )
       .settings(
-        ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 70,
-        ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := false,
+        ScoverageSbtPlugin.ScoverageKeys.coverageMinimum := 65,
+        ScoverageSbtPlugin.ScoverageKeys.coverageFailOnMinimum := true,
         fork := true
       )
       .settings(

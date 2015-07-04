@@ -3,7 +3,7 @@ package uk.co.pragmasoft.graphdb.orient
 import com.tinkerpop.gremlin.scala._
 import org.scalatest.{FlatSpec, Matchers}
 import uk.co.pragmasoft.graphdb.orient.sampledao.marshallers.BandMarshaller
-import uk.co.pragmasoft.graphdb.orient.sampledao.{Band, BandDao, Musician, MusicianDao}
+import uk.co.pragmasoft.graphdb.orient.sampledao._
 import uk.co.pragmasoft.graphdb.orient.support.{MusicFixtureDBSupport, OrientDBMemoryTestSupport}
 
 
@@ -94,6 +94,14 @@ class OrientDBDaoSpec extends FlatSpec with Matchers with OrientDBMemoryTestSupp
 
     bandDao.findByPartialName("Against").toList should be (List(ratm))
 
+  }
+
+  it should "query without index" in withInMemoryOrientGraphDB { implicit graphFactory =>
+    val fanDao = new FanDao(graphFactory)
+
+    val fan = fanDao.create( Fan("", "Fan Name", 15, Set.empty) )
+
+    fanDao.findByName("Fan Name").toList should be (List(fan))
   }
 
   it should "return NONE instead of trying to read a wrong object if asked to retrieve an Vertex of a different class" in withInMemoryOrientGraphDB { implicit graphFactory =>

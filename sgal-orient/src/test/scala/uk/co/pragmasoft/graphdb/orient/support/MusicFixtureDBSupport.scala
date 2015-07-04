@@ -12,8 +12,6 @@ import uk.co.pragmasoft.graphdb.orient.sampledao.marshallers.{BandMarshaller, Fa
 trait MusicFixtureDBSupport {
   def initDB(db: OrientGraphNoTx): Unit = {
     val fan = db.createVertexType(FanMarshaller.vertexClassName)
-    // Fan has a Lucene index on the attribute name
-    fan.createProperty(FanMarshaller.NameAttribute, OType.STRING).createIndex(OClass.INDEX_TYPE.NOTUNIQUE)
     fan.createProperty(FanMarshaller.AgeAttribute, OType.INTEGER).createIndex(OClass.INDEX_TYPE.NOTUNIQUE_HASH_INDEX)
 
     val band = db.createVertexType(BandMarshaller.vertexClassName)

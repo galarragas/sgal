@@ -28,7 +28,7 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
    *              
    * @return a query object with an already set filter on entites of the handled vertex class type
    */
-  protected def queryForEntityClass(implicit graph: OrientGraph): Query = {
+  protected def queryForEntityClass(implicit graph: TransactionalGraph): Query = {
     graph.query().asInstanceOf[OrientGraphQuery].labels(marshaller.vertexClassName)
   }
 
@@ -40,7 +40,7 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
    *
    * @return Some(vertex) if the vertex is found and is of the right class type, None otherwise 
    */
-  override def getRawById(id: Any)(implicit graphDB: TransactionalGraph): Option[Vertex] = {
+  override def getAsVertexById(id: Any)(implicit graphDB: TransactionalGraph): Option[Vertex] = {
     val theVertex: OrientVertex = graphDB.getVertex(id).asInstanceOf[OrientVertex]
     if (theVertex != null && theVertex.getVertexInstance.getVertexInstance.getLabel == marshaller.vertexClassName) {
       Some(theVertex)
@@ -54,12 +54,12 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
    * Find vertices of the given class by the given property name. The property is expected to have been indexed
    * According to OrientDB class index strategy.
    */
-  protected def findByIndexedProperty(className: String, propertyName: String, value: Any)(implicit graph: OrientGraph): Iterator[Vertex] = {
+  protected def findByIndexedProperty(className: String, propertyName: String, value: Any)(implicit graph: TransactionalGraph): Iterator[Vertex] = {
     findWithIndex(s"$className.$propertyName", value)
   }
 
 
-  protected def findByIndexedProperty(propertyName: String, value: Any)(implicit graph: OrientGraph): Iterator[T] =
+  protected def findByIndexedProperty(propertyName: String, value: Any)(implicit graph: TransactionalGraph): Iterator[T] =
     findByIndexedProperty(marshaller.vertexClassName, propertyName, value).map(_.as[T])
 
 
@@ -74,20 +74,22 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
     ).iterator()
   }
 
-  protected def findByIndexedProperties(propertyNames: Iterable[String], values: Iterable[Any])(implicit graph: OrientGraph): Iterator[T] =
+  protected def findByIndexedProperties(propertyNames: Iterable[String], values: Iterable[Any])(implicit graph: OrientGraph): Iterator[T] = {
     findByIndexedProperties(marshaller.vertexClassName, propertyNames, values).map(_.as[T])
+
+  }
 
   /**
    * Finds vertices using orient's index with the given name
    */
-  protected def findWithIndex(indexFullName: String, value: Any)(implicit graph: OrientGraph): Iterator[Vertex] = {
+  protected def findWithIndex(indexFullName: String, value: Any)(implicit graph: TransactionalGraph): Iterator[Vertex] = {
     graph.getVertices(indexFullName, value).iterator()
   }
 
   /**
    * Finds vertices using orient's composite index with the given name
    */
-  protected def findByCompositeIndex(indexFullName: String, values: Any*)(implicit graph: OrientGraph): Iterator[Vertex] = {
+  protected def findByCompositeIndex(indexFullName: String, values: Any*)(implicit graph: TransactionalGraph): Iterator[Vertex] = {
     graph.getVertices(indexFullName, seqAsJavaList(values.toSeq) ).iterator()
   }
 

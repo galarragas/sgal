@@ -6,7 +6,13 @@ import uk.co.pragmasoft.graphdb.orient.sampledao.marshallers.{BandMarshaller, Fa
 import uk.co.pragmasoft.graphdb.orient.{OrientDBBasicConversions, OrientDbDAO, OrientIndexNamingSupport}
 import uk.co.pragmasoft.graphdb.validation.NoValidations
 
+import scala.collection.JavaConversions._
+
 class FanDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO[Fan] with OrientIndexNamingSupport with OrientDBBasicConversions with NoValidations[Fan] {
+  def findByName(fullName: String): Iterable[Fan] = withGraphDb { implicit db =>
+    queryForEntityClass.has(marshaller.NameAttribute, fullName).vertices.map( _.as[Fan] )
+  }
+
 
   override def marshaller = FanMarshaller
 
@@ -36,6 +42,7 @@ class BandDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO
   def findByPartialName(partialName: String): Iterable[Band] = withGraphDb { implicit db =>
     implicit val orientDb = db.asInstanceOf[OrientGraph]
 
+    // A LUCENE index is defined on the Band Name
     findByIndexedProperty(marshaller.NameAttribute, partialName).toIterable
   }
 }
