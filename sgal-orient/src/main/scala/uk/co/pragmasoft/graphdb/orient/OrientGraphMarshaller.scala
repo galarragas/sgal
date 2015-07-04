@@ -2,7 +2,7 @@ package uk.co.pragmasoft.graphdb.orient
 
 import uk.co.pragmasoft.graphdb.marshalling.GraphMarshaller
 
-trait OrientGraphMarshaller[T] extends GraphMarshaller[T] {
+trait OrientGraphMarshaller[T] extends GraphMarshaller[T] with OrientGraphMarshallingDSL {
   /**
    * The class name for this vertex in Orient
    */

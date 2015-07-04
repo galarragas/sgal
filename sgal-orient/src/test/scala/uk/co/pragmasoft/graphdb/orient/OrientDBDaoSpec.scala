@@ -25,7 +25,8 @@ class OrientDBDaoSpec extends FlatSpec with Matchers with OrientDBMemoryTestSupp
 
   it should "Read an object from the DB given its ID" in withInMemoryOrientGraphDB { implicit graphFactory =>
 
-    val vertexId = writeVertex("1", Map( "name" -> "Brian May", "instrument" -> "guitar" ) )
+    // Write the object using the right class if you want to retrieve it
+    val vertexId = writeVertex("class:musician", Map( "name" -> "Brian May", "instrument" -> "guitar" ) )
 
     val musicianDao = new MusicianDao(graphFactory)
 
@@ -84,4 +85,26 @@ class OrientDBDaoSpec extends FlatSpec with Matchers with OrientDBMemoryTestSupp
       Band("", "Queen", Set("rock", "pop", "prog", "dance"), Set(brianMay, rogerTaylor, freddyMercury, johnDeacon))
     )
   }
+
+  it should "query using indexes" in withInMemoryOrientGraphDB { implicit graphFactory =>
+
+    val bandDao = new BandDao(graphFactory)
+
+    val ratm = bandDao.create( Band("", "Rage Against The Machine", Set("rock", "metal", "rap", "crossover"), Set.empty) )
+
+    bandDao.findByPartialName("Against").toList should be (List(ratm))
+
+  }
+
+  it should "return NONE instead of trying to read a wrong object if asked to retrieve an Vertex of a different class" in withInMemoryOrientGraphDB { implicit graphFactory =>
+    val bandDao = new BandDao(graphFactory)
+    val musicianDao = new MusicianDao(graphFactory)
+
+    val brianMay = musicianDao.create( Musician("", "Brian May", "guitar") )
+    val ratm = bandDao.create( Band("", "Rage Against The Machine", Set("rock", "metal", "rap", "crossover"), Set.empty) )
+
+    bandDao.getById(brianMay.id) should be(None)
+
+  }
+
 }

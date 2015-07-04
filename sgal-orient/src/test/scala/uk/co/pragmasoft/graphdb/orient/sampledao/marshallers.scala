@@ -31,8 +31,8 @@ object marshallers {
     override def readFrom(vertex: Vertex)(implicit graphDb: TransactionalGraph) =
       Musician(
         id = vertex.getId.asInstanceOf[ORID],
-        name = vertex.getProperty[String](NameAttribute),
-        instrument = vertex.getProperty[String](InstrumentAttribute)
+        name = vertex.property(NameAttribute).get, // Name is mandatory
+        instrument = vertex.property(InstrumentAttribute).getOrElse("")
       )
 
     override def updateProperties(musician: Musician, vertex: Vertex)(implicit graphDb: TransactionalGraph): Unit = {
@@ -57,8 +57,8 @@ object marshallers {
     override def readFrom(vertex: Vertex)(implicit graphDb: TransactionalGraph): Band =
       Band(
         vertex.getId.asInstanceOf[ORID],
-        vertex.getProperty[String](NameAttribute),
-        vertex.getProperty(StylesAttribute).asInstanceOf[Set[String]],
+        vertex.property(NameAttribute).get,
+        vertex.embeddedSetProperty[String](StylesAttribute).getOrElse(Set.empty),
         vertex.inAdjacentsForLabel[Musician](PlaysIn).toSet
       )
 

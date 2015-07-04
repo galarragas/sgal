@@ -74,6 +74,7 @@ object GraphMarshallingDSL extends GraphMarshallingDSL {
        vertex.getVertices(Direction.IN, label).map( _.as[EdgeTailType] )
      }
 
+     def property[T](name: String): Option[T] = Option(vertex.getProperty(name))
 
      def --> (label: String) = new HalfBoundOutputEdge(label, vertex)
      def <-- (label: String) = new HalfBoundInputEdge(label, vertex)

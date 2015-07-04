@@ -85,7 +85,9 @@ entity readMaybe vertexMaybe
 
 ## Creating a Data Access Object
 
-Using the given marshaller you can create a CRUD supporting DAO with an extra query method with the following code (OrientDB specific)
+Using the given marshaller you can create a CRUD supporting DAO with an extra query method with the following code. 
+Note that the code is using some OrientDB specific features as the query by Lucene Index
+
 
 ```scala
 class BandDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO[Band] with OrientIndexNamingSupport with OrientDBBasicConversions with NoValidations[Band] {
@@ -93,13 +95,19 @@ class BandDao(override val graphFactory: OrientGraphFactory) extends OrientDbDAO
   override def marshaller = BandMarshaller
   
   def findByMusician(musician: Musician): Iterable[Band] = withGraphDb { implicit db =>
-      vertexFor(musician).fold(Stream.empty[Band]) { vertex =>
-        vertex.out(marshaller.PlaysIn)
-          .map( _.as[Band] )
-          .toStream()
-      }
+    vertexFor(musician).fold(Stream.empty[Band]) { vertex =>
+      vertex.out(marshaller.PlaysIn)
+        .map { _.as[Band] }
+        .toStream()
     }
+  }
 
+
+  def findByPartialName(partialName: String): Iterable[Band] = withGraphDb { implicit db =>
+    implicit val orientDb = db.asInstanceOf[OrientGraph]
+
+    findByIndexedProperty(marshaller.NameAttribute, partialName).toIterable
+  }
 }
 ```
 
