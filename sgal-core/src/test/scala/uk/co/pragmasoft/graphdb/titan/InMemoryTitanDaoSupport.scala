@@ -3,7 +3,7 @@ package uk.co.pragmasoft.graphdb.titan
 import com.thinkaurelius.titan.core.{TitanFactory, TitanGraph}
 
 
-trait InMemoryTitanDao  {
+trait InMemoryTitanDaoSupport  {
 
   def withTitanDao[T](block: TitanGraph => T): T = {
     val graph = TitanFactory.build().set( "storage.backend","inmemory").open()

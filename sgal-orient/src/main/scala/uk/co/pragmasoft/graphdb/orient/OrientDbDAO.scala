@@ -20,6 +20,42 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
 
   override protected def createTransactionalGraph: TransactionalGraph = graphFactory.getTx()
 
+  override def create(newInstance: T): T = {
+    validateNew(newInstance)
+
+    withGraphDb { implicit graphDB =>
+      val newVertex = createNewVertex(_marshaller.getModelObjectID(newInstance))
+      newInstance writeTo newVertex
+
+      // Need to close the first transaction to have the ID created valid
+      graphDB.commit()
+
+      newVertex.as[T]
+    }
+  }
+
+  override def update(existingInstance: T): T = {
+    validateUpdate(existingInstance)
+
+    val updatedVertex = withGraphDb { implicit graphDB =>
+      val id = _marshaller.getModelObjectID(existingInstance)
+
+      val vertexOp = getAsVertexById(id)
+      require(vertexOp.isDefined, s"unable to update entity with Id ${existingInstance.getVertexId}. Not in the DB")
+
+      val vertex = vertexOp.get
+
+      existingInstance updateTo vertex
+
+      vertex
+    }
+
+    readWithGraphDb { implicit graphDB =>
+      updatedVertex.as[T]
+    }
+  }
+
+
   /**
    * Query entities of the vertex class using OrientDB custom features
    * See https://groups.google.com/forum/#!topic/orient-database/9lnoOeN7Y3U

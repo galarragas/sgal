@@ -4,13 +4,11 @@ import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
 import uk.co.pragmasoft.graphdb.marshalling.{GraphMarshallingDSL, GraphMarshaller}
 import uk.co.pragmasoft.graphdb.validation.GraphDAOValidations
 
-trait GraphDAO[T] extends CrudDAO[T]  {
+trait GraphDAO[T] extends CrudDAO[T] with GraphMarshallingDSL {
 
   self: GraphDAOValidations[T] =>
 
   protected def createTransactionalGraph: TransactionalGraph
-
-  import GraphMarshallingDSL._
 
   def marshaller: GraphMarshaller[T]
   implicit val _marshaller = marshaller
@@ -33,8 +31,6 @@ trait GraphDAO[T] extends CrudDAO[T]  {
         e.printStackTrace()
         graphDb.rollback()
         throw e
-    } finally {
-      graphDb.shutdown()
     }
   }
 
@@ -57,9 +53,6 @@ trait GraphDAO[T] extends CrudDAO[T]  {
        val newVertex = createNewVertex(_marshaller.getModelObjectID(newInstance))
        newInstance writeTo newVertex
 
-       // Need to close the first transaction to have the ID created valid
-       graphDB.commit()
-
        newVertex.as[T]
      }
    }
@@ -67,7 +60,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
   override def update(existingInstance: T): T = {
     validateUpdate(existingInstance)
 
-    val updatedVertex = withGraphDb { implicit graphDB =>
+    withGraphDb { implicit graphDB =>
       val id = _marshaller.getModelObjectID(existingInstance)
 
       val vertexOp = getAsVertexById(id)
@@ -77,11 +70,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
 
       existingInstance updateTo vertex
 
-      vertex
-    }
-
-    readWithGraphDb { implicit graphDB =>
-      updatedVertex.as[T]
+      vertex.as[T]
     }
   }
 
@@ -101,7 +90,10 @@ trait GraphDAO[T] extends CrudDAO[T]  {
     getAsVertexById(id) map { _.as[T]  }
   }
 
-  def getAsVertexById(id: Any)(implicit graphDB: TransactionalGraph): Option[Vertex] =  Option( graphDB.getVertex(id))
+  def getAsVertexById(id: Any)(implicit graphDB: TransactionalGraph): Option[Vertex] = {
+    val v = graphDB.getVertex(id)
+    Option(v)
+  }
 
   protected def createNewVertex(id: Any)(implicit graphDb: TransactionalGraph): Vertex = graphDb.addVertex(id)
 

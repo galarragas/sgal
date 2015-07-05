@@ -7,12 +7,12 @@
 The idea behind this project is to provide a set of common functionnalities and some very basic guidance when writing 
 Data Access Objects for Graph Databases supporting the Tinkerpop Blueprint API.
 
-It is composed by a set of abstract interfaces and behavior and implementations for different databases 
-(at the moment just OrientDB)
-
+It is composed by a set of abstract interfaces and behavior and a custom implementations for OrientDB. The core package
+works with Titan. See [the unit tests for Titan DB](./sgal-core/src/test/scala/uk/co/pragmasoft/graphdb/titan/TitanTestVertexDao.scala) 
+for an example.
 
 Using SGAL you'll automatically be able to have a full CRUD support for objects of type `T` in the DB at the cost of 
-defining a marshaller for `T`
+defining a **marshaller** for `T`
 
 The responsibilities of the marshaller are to:
 
@@ -144,19 +144,38 @@ An already available implementation of the validation is based on the [ValiData 
 and allows you to specify the data validations with a simple DSL as per the example below:
 
 ```scala
-trait TestVertexValiDataValidations extends ValiDataValidations[TestVertex] {
+object TestVertexValidator extends TypeValidator[TestVertex] with BaseValidations {
+  override def validations = requiresAll(
+    "Key" definedBy { _.key } must { beOfMinimumLength(3) and matchRegexOnce("[a-z]+.*".r) },
+    "Property" definedBy { _.property } must bePositive[Int]
+  )
+}
 
-    override val newInstanceValidator = new TypeValidator[TestVertex] with BaseValidations {
-      override def validations =
-        ( "Key" definedBy { _.key } must beNotEmpty ) and ( "Property" definedBy { _.property} must bePositive[Int] )
-    }
+class TitanTestVertexDao(graph: TitanGraph) extends GraphDAO[TestVertex] with ValiDataValidations[TestVertex]  {
 
-    override val updatedInstanceValidator = new TypeValidator[TestVertex] with BaseValidations {
-      override def validations =
-        "Property" definedBy { _.property} must bePositive[Int]
+  override protected def createTransactionalGraph: TransactionalGraph = graph.newTransaction()
+
+  override protected def newInstanceValidator: TypeValidator[TestVertex] = TestVertexValidator
+  override protected def updatedInstanceValidator: TypeValidator[TestVertex] = TestVertexValidator
+
+  override def marshaller = new TestVertexMarshaller
+
+  // Returning a Stream here will fail because the objects would be read outside the transaction...
+  def findByRelationship2(relatedObj: TestVertex): Iterable[TestVertex] = readWithGraphDb { implicit graph =>
+    vertexFor(relatedObj).fold(List.empty[TestVertex]) { vertex =>
+      vertex
+        .out(TestVertexMarshaller.InBoundRelationship)
+        .map( _.as[TestVertex] )
+        .toList[TestVertex]
     }
   }
+}
 ```
+
+## OrientDB Support
+
+The sub-project sgal-orient contains an extension of sgal-core with some specific features for Orient and some changes
+in custom methods implementation to support some difference in the transaction support in Orient compared to Titan.
 
 ## License
 
