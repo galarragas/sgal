@@ -1,12 +1,13 @@
-package uk.co.pragmasoft.graphdb.marshalling
+package uk.co.pragmasoft.graphdb
 
 import com.tinkerpop.blueprints.{Edge, TransactionalGraph, Vertex}
 import org.mockito.Matchers.{any => anyArg, anyString, eq => argEq}
 import org.mockito.Mockito.{verify, when}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FlatSpec, Matchers}
-import uk.co.pragmasoft.graphdb.validation.{ValiDataValidations, GraphDAOValidations, NoValidations}
-import uk.co.pragmasoft.validate.{DataValidationFunction, BaseValidations, TypeValidator}
+import uk.co.pragmasoft.graphdb.marshalling.GraphMarshaller
+import uk.co.pragmasoft.graphdb.validation.{GraphDAOValidations, NoValidations, ValiDataValidations}
+import uk.co.pragmasoft.validate.{BaseValidations, TypeValidator}
 
 import scala.collection.mutable
 
@@ -21,11 +22,11 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val marshaller = mock[GraphMarshaller[TestVertex]]
     val vertex = mock[Vertex]
 
-    val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val dao = new DITestVertexDao(graph, marshaller) with NoValidations[TestVertex]
+    val entity = TestVertex(-1, "key", 1, None, Set.empty)
 
-    when(marshaller.getModelObjectID(entity)).thenReturn("key".asInstanceOf[marshaller.IdType])
-    when(graph.addVertex("key")) thenReturn vertex
+    when(marshaller.getModelObjectID(entity)).thenReturn((-1l).asInstanceOf[marshaller.IdType])
+    when(graph.addVertex(Long.box(-1))) thenReturn vertex
 
     dao create entity
 
@@ -39,11 +40,11 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val marshaller = mock[GraphMarshaller[TestVertex]]
     val vertex = mock[Vertex]
 
-    val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val dao = new DITestVertexDao(graph, marshaller) with NoValidations[TestVertex]
+    val entity = TestVertex(1, "key", 1, None, Set.empty)
 
-    when(marshaller.getModelObjectID(entity)).thenReturn("key".asInstanceOf[marshaller.IdType])
-    when(graph.getVertex("key")) thenReturn vertex
+    when(marshaller.getModelObjectID(entity)).thenReturn( (1).asInstanceOf[marshaller.IdType])
+    when(graph.getVertex(1)) thenReturn vertex
 
     dao update entity
 
@@ -55,11 +56,11 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val graph = mock[TransactionalGraph]
     val marshaller = mock[GraphMarshaller[TestVertex]]
 
-    val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val dao = new DITestVertexDao(graph, marshaller) with NoValidations[TestVertex]
+    val entity = TestVertex(1, "key", 1, None, Set.empty)
 
-    when(marshaller.getModelObjectID(entity)).thenReturn("key".asInstanceOf[marshaller.IdType])
-    when(graph.getVertex("key")) thenReturn null
+    when(marshaller.getModelObjectID(entity)).thenReturn(1.asInstanceOf[marshaller.IdType])
+    when(graph.getVertex(1)) thenReturn null
 
     intercept[IllegalArgumentException] {
       dao update entity
@@ -71,11 +72,11 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val marshaller = mock[GraphMarshaller[TestVertex]]
     val vertex = mock[Vertex]
 
-    val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val dao = new DITestVertexDao(graph, marshaller) with NoValidations[TestVertex]
+    val entity = TestVertex(1, "key", 1, None, Set.empty)
 
-    when(marshaller.getModelObjectID(entity)).thenReturn("key".asInstanceOf[marshaller.IdType])
-    when(graph.getVertex("key")) thenReturn vertex
+    when(marshaller.getModelObjectID(entity)).thenReturn(1.asInstanceOf[marshaller.IdType])
+    when(graph.getVertex(1)) thenReturn vertex
 
     (dao delete entity) should be (true)
 
@@ -86,11 +87,11 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val graph = mock[TransactionalGraph]
     val marshaller = mock[GraphMarshaller[TestVertex]]
 
-    val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val dao = new DITestVertexDao(graph, marshaller) with NoValidations[TestVertex]
+    val entity = TestVertex(1, "key", 1, None, Set.empty)
 
-    when(marshaller.getModelObjectID(entity)).thenReturn("key".asInstanceOf[marshaller.IdType])
-    when(graph.getVertex("key")) thenReturn null
+    when(marshaller.getModelObjectID(entity)).thenReturn(1.asInstanceOf[marshaller.IdType])
+    when(graph.getVertex(1)) thenReturn null
 
     (dao delete entity) should be (false)
 
@@ -101,15 +102,15 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val marshaller = mock[GraphMarshaller[TestVertex]]
     val vertex = mock[Vertex]
 
-    when(graph.getVertex(argEq("key"))) thenReturn vertex
+    when(graph.getVertex(argEq(1))) thenReturn vertex
 
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val entity = TestVertex(1, "key", 1, None, Set.empty)
 
     when(marshaller.readFrom(vertex)(graph)) thenReturn entity
 
-    val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
+    val dao = new DITestVertexDao(graph, marshaller) with NoValidations[TestVertex]
 
-    (dao getById "key") should be(Some(entity))
+    (dao getById 1) should be(Some(entity))
   }
 
   it should "return NONE if the vertex is not found" in {
@@ -118,7 +119,7 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
 
     when(graph.getVertex(argEq("key"))) thenReturn null
 
-    val dao = new TestVertexDao(graph, marshaller) with NoValidations[TestVertex]
+    val dao = new DITestVertexDao(graph, marshaller) with NoValidations[TestVertex]
 
     (dao getById "key") should be(None)
   }
@@ -128,9 +129,9 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val graph = mock[TransactionalGraph]
     val marshaller = mock[GraphMarshaller[TestVertex]]
 
-    val dao = new TestVertexDao(graph, marshaller) with RecordingValidations[TestVertex]
+    val dao = new DITestVertexDao(graph, marshaller) with RecordingValidations[TestVertex]
 
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val entity = TestVertex(-1, "key", 1, None, Set.empty)
 
     dao create entity
 
@@ -142,9 +143,9 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val marshaller = mock[GraphMarshaller[TestVertex]]
     val vertex = mock[Vertex]
 
-    val dao = new TestVertexDao(graph, marshaller) with RecordingValidations[TestVertex]
+    val dao = new DITestVertexDao(graph, marshaller) with RecordingValidations[TestVertex]
 
-    val entity = TestVertex("key", 1, None, Set.empty)
+    val entity = TestVertex(1, "key", 1, None, Set.empty)
 
     when(graph.getVertex(anyString)) thenReturn vertex
 
@@ -157,10 +158,10 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val graph = mock[TransactionalGraph]
     val marshaller = mock[GraphMarshaller[TestVertex]]
 
-    val dao = new TestVertexDao(graph, marshaller) with FailingValidations[TestVertex]
+    val dao = new DITestVertexDao(graph, marshaller) with FailingValidations[TestVertex]
 
     intercept[IllegalArgumentException] {
-      dao create TestVertex("key", 1, None, Set.empty)
+      dao create TestVertex(1, "key", 1, None, Set.empty)
     }
   }
 
@@ -169,12 +170,12 @@ class GraphDAOSpec extends FlatSpec with Matchers with MockitoSugar{
     val marshaller = mock[GraphMarshaller[TestVertex]]
     val vertex = mock[Vertex]
 
-    val dao = new TestVertexDao(graph, marshaller) with FailingValidations[TestVertex]
+    val dao = new DITestVertexDao(graph, marshaller) with FailingValidations[TestVertex]
 
     when(graph.getVertex(anyString)) thenReturn vertex
 
     intercept[IllegalArgumentException] {
-      dao update TestVertex("key", 1, None, Set.empty)
+      dao update TestVertex(1, "key", 1, None, Set.empty)
     }
   }
 

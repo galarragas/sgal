@@ -4,12 +4,14 @@ import sbtassembly.AssemblyKeys._
 
 object Common {
 
+  // With version 0.9.0-M1/M2 had problems with TitanGraph not being a TransactionalGraph
+  private val titanVersion = "0.5.4"
+
   lazy val commonResolvers = Seq(
     DefaultMavenRepository,
     Resolver.typesafeRepo("releases"),
     "Conjars Repo" at "http://conjars.org/repo"
   )
-
 
   lazy val commonSettings: Seq[Setting[_]] = Seq (
     version := "0.1",
@@ -64,5 +66,10 @@ object Common {
 
   
   val commonsLang = Seq("commons-lang" % "commons-lang" % "2.6")
+
+
+  val titan = Seq(
+    "com.thinkaurelius.titan" % "titan-core" % titanVersion
+  )
 
 }

@@ -10,7 +10,8 @@ object SgalBuild extends Build {
       gremlinScala ++
       scalaTest ++
       mockito ++
-      valiData
+      valiData ++
+      (titan map { _ % "test" })
 
     val orientClasspath =
       orientDb ++

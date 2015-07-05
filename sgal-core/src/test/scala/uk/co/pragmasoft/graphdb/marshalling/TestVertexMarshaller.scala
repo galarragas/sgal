@@ -1,13 +1,14 @@
 package uk.co.pragmasoft.graphdb.marshalling
 
 import com.tinkerpop.blueprints.{TransactionalGraph, Vertex}
+import uk.co.pragmasoft.graphdb.TestVertex
 
 class TestVertexMarshaller extends GraphMarshaller[TestVertex] {
   import TestVertexMarshaller._
 
-  override type IdType = String
+  override type IdType = Long
 
-  override def getModelObjectID(obj: TestVertex): IdType = obj.key
+  override def getModelObjectID(obj: TestVertex) = obj.id
 
   override protected def propertiesForCreate(data: TestVertex) =
     Set(
@@ -43,6 +44,7 @@ class TestVertexMarshaller extends GraphMarshaller[TestVertex] {
     implicit val targetRelationshipMarshaller = this
 
     TestVertex(
+      vertex.getId.asInstanceOf[Long],
       vertex.getProperty(Key),
       vertex.getProperty(Property),
       vertex.outAdjacentsForLabel(OutBoundRelationship).headOption,

@@ -30,6 +30,7 @@ trait GraphDAO[T] extends CrudDAO[T]  {
       result
     } catch {
       case e: Exception =>
+        e.printStackTrace()
         graphDb.rollback()
         throw e
     } finally {
