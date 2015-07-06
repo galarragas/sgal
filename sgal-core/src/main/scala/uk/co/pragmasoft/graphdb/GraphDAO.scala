@@ -28,7 +28,6 @@ trait GraphDAO[T] extends CrudDAO[T] with GraphMarshallingDSL {
       result
     } catch {
       case e: Exception =>
-        e.printStackTrace()
         graphDb.rollback()
         throw e
     }

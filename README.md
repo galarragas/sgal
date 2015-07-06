@@ -33,7 +33,7 @@ A Marshaller looks like the following code
     val NameAttribute = "name"
     val StylesAttribute = "styles"
 
-    override def getModelObjectID(artist: Band) = artist.id
+    override def getModelObjectID(band: Band) = band.id
 
     override def read(vertex: Vertex)(implicit graphDb: TransactionalGraph): Band =
       Band(
@@ -43,28 +43,26 @@ A Marshaller looks like the following code
         vertex.inAdjacentsForLabel[Musician](PlaysIn).toSet
       )
 
-    override def propertiesForCreate(artist: Band) = Set(
-      NameAttribute -> artist.name,
-      StylesAttribute -> artist.styles
+    override def propertiesForCreate(band: Band) = Set(
+      NameAttribute -> band.name,
+      StylesAttribute -> band.styles
     )
 
     // Cannot update name..
-    override def propertiesForUpdate(artist: Band) = Set(
-      StylesAttribute -> artist.styles
+    override def propertiesForUpdate(band: Band) = Set(
+      StylesAttribute -> band.styles
     )
 
     override def writeRelationships(artist: Band, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
       artist.musicians.foreach { musician =>
-        vertex.addInEdgeFrom(musician, PlaysIn)
+        vertex <-- PlaysIn <-- musician
       }
     }
 
-    override def updateRelationships(artist: Band, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
-      vertex.removeEdges(PlaysIn, Direction.IN )
+    override def updateRelationships(band: Band, vertex: Vertex)(implicit graphDb: TransactionalGraph) = {
+      vertex.removeEdges(PlaysIn, Direction.IN)
 
-      artist.musicians.foreach { musician =>
-        vertex <-- PlaysIn <-- musician
-      }
+      writeRelationships(band, vertex)
     }
   }
 ```
@@ -153,7 +151,7 @@ object TestVertexValidator extends TypeValidator[TestVertex] with BaseValidation
 
 class TitanTestVertexDao(graph: TitanGraph) extends GraphDAO[TestVertex] with ValiDataValidations[TestVertex]  {
 
-  override protected def createTransactionalGraph: TransactionalGraph = graph.newTransaction()
+  override protected def createTransactionalGraph: TransactionalGraph = graph
 
   override protected def newInstanceValidator: TypeValidator[TestVertex] = TestVertexValidator
   override protected def updatedInstanceValidator: TypeValidator[TestVertex] = TestVertexValidator

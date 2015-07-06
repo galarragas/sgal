@@ -17,7 +17,7 @@ object TestVertexValidator extends TypeValidator[TestVertex] with BaseValidation
 
 class TitanTestVertexDao(graph: TitanGraph) extends GraphDAO[TestVertex] with ValiDataValidations[TestVertex]  {
 
-  override protected def createTransactionalGraph: TransactionalGraph = graph.newTransaction()
+  override protected def createTransactionalGraph: TransactionalGraph = graph
 
   override protected def newInstanceValidator: TypeValidator[TestVertex] = TestVertexValidator
   override protected def updatedInstanceValidator: TypeValidator[TestVertex] = TestVertexValidator

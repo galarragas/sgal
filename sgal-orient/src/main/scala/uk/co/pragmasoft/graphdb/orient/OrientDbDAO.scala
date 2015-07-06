@@ -20,6 +20,28 @@ trait OrientDbDAO[T] extends GraphDAO[T] with OrientDBBasicConversions with Grap
 
   override protected def createTransactionalGraph: TransactionalGraph = graphFactory.getTx()
 
+
+  // FOR ORIENTDB THIS METHOD CAN BE USED ALSO NESTED
+  // See https://github.com/orientechnologies/orientdb/wiki/Transaction-propagation about transaction propagation
+  // Using pools: http://www.orientechnologies.com/new-orientdb-graph-factory/
+  // We should be fine in using nested trasaction opening and committing local operations
+  // https://github.com/orientechnologies/orientdb/wiki/Transactions
+  override protected def withGraphDb[T](block : TransactionalGraph=> T): T = {
+    val graphDb = createTransactionalGraph
+
+    try {
+      val result = block(graphDb)
+      graphDb.commit()
+
+      result
+    } catch {
+      case e: Exception =>
+        graphDb.rollback()
+        throw e
+    }
+  }
+
+
   override def create(newInstance: T): T = {
     validateNew(newInstance)
 
