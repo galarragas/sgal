@@ -5,10 +5,10 @@
 ## What is It?
 
 The idea behind this project is to provide a set of common functionnalities and some very basic guidance when writing 
-Data Access Objects for Graph Databases supporting the Tinkerpop Blueprint API.
+Data Access Objects for Graph Databases supporting the [Tinkerpop Blueprint API](https://github.com/tinkerpop/blueprints).
 
-It is composed by a set of abstract interfaces and behavior and a custom implementations for OrientDB. The core package
-works with Titan. See [the unit tests for Titan DB](./sgal-core/src/test/scala/uk/co/pragmasoft/graphdb/titan/TitanTestVertexDao.scala) 
+It is composed by a set of abstract interfaces and behavior and a custom implementations for [OrientDB](http://orientdb.com). The core package
+works with [Titan](http://titan.thinkaurelius.com). See [the unit tests for Titan DB](./sgal-core/src/test/scala/uk/co/pragmasoft/graphdb/titan/TitanTestVertexDao.scala) 
 for an example.
 
 Using SGAL you'll automatically be able to have a full CRUD support for objects of type `T` in the DB at the cost of 
